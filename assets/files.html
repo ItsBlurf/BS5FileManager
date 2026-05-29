@@ -104,13 +104,14 @@
     }
 
     .brand {
-      width: 42px;
+      width: 46px;
       height: 42px;
       display: grid;
       place-items: center;
       border: 2px solid var(--deep);
       border-radius: 8px;
       color: var(--deep);
+      font-size: 13px;
       font-weight: 800;
     }
 
@@ -434,11 +435,13 @@
     }
 
     .job-text {
+      grid-column: 1 / -1;
       color: var(--muted);
       font-size: 12px;
       overflow: hidden;
       text-overflow: ellipsis;
-      white-space: nowrap;
+      overflow-wrap: anywhere;
+      white-space: normal;
     }
 
     .toast {
@@ -558,7 +561,7 @@
 <body>
   <header class="top">
     <div class="top-inner">
-      <div class="brand">B5</div>
+      <div class="brand">BS5</div>
       <div class="title">
         <strong>BS5FileManager</strong>
         <span id="build">File Manager</span>
