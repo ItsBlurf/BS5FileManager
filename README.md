@@ -24,6 +24,10 @@ On first run, the payload installs or updates a PS5 home-screen tile named
 http://127.0.0.1:5905/
 ```
 
+When the launcher is newly installed or updated, the payload also asks the PS5
+to open that local browser URL once. Later loads keep the tile available without
+forcing the browser open again.
+
 The payload also shows a PS5 notification with the external browser URL when
 the web server is ready. Port `5905` is fixed so this payload can run next to
 older builds that may still be listening on another port.
@@ -55,7 +59,9 @@ At a high level the payload has five parts:
   notifications, installs the launcher tile if needed, and starts the HTTP
   server on port `5905`.
 - `src/app_installer.c` writes the embedded launcher metadata/icon under
-  `/user/app/BS5F00001` and registers the PS5 home-screen tile.
+  `/user/app/BS5F00001` and registers the PS5 home-screen tile. The installer
+  resolves the title-directory install function from `libSceAppInstUtil.sprx`
+  at runtime and falls back to the broader app install call when needed.
 - `src/websrv_lite.c` is a compact HTTP server. It serves the embedded UI,
   static downloads under `/fs`, and JSON APIs under `/api/fs`.
 - `src/transfer.c` implements the file-manager API: list, stat, folder size,

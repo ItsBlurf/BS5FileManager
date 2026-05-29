@@ -3,11 +3,14 @@
  */
 
 #include <errno.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+
+#include <ps5/kernel.h>
 
 #include "app_installer.h"
 #include "notify.h"
@@ -15,6 +18,7 @@
 #define BS5FM_APP_TITLE_ID "BS5F00001"
 #define BS5FM_APP_ROOT "/user/app"
 #define BS5FM_APP_PARENT BS5FM_APP_ROOT "/"
+#define BS5FM_INSTALL_MARKER "bs5filemanager-launcher-v2\n"
 
 #define INCASSET(name, file)                                                   \
   __asm__(".section .rodata\n"                                                 \
@@ -32,9 +36,30 @@ INCASSET(bs5fm_param_json, "assets-app/param.json");
 INCASSET(bs5fm_icon0_png, "assets-app/icon0.png");
 
 int sceAppInstUtilInitialize(void);
-int sceAppInstUtilAppInstallTitleDir(const char *, const char *, void *);
+int sceAppInstUtilAppInstallAll(void *);
 
-static const uint8_t g_install_marker[] = "bs5filemanager-launcher-v1\n";
+typedef int (*app_install_title_dir_fn)(const char *, const char *, void *);
+
+static const uint8_t g_install_marker[] = BS5FM_INSTALL_MARKER;
+
+
+static int
+install_app(const char *title_id, const char *dir) {
+  app_install_title_dir_fn sceAppInstUtilAppInstallTitleDir = NULL;
+  uint32_t handle = 0;
+
+  if(kernel_dynlib_handle(-1, "libSceAppInstUtil.sprx", &handle) == 0) {
+    sceAppInstUtilAppInstallTitleDir =
+        (app_install_title_dir_fn)kernel_dynlib_resolve(-1, handle,
+                                                        "Wudg3Xe3heE");
+  }
+
+  if(sceAppInstUtilAppInstallTitleDir) {
+    return sceAppInstUtilAppInstallTitleDir(title_id, dir, NULL);
+  }
+
+  return sceAppInstUtilAppInstallAll(NULL);
+}
 
 
 static int
@@ -106,7 +131,11 @@ bs5fm_install_app_if_needed(void) {
 
   if(!needs_install) return 0;
 
-  bs5fm_notify("BS5FileManager app", "Installing PS5 home-screen launcher");
+  if(stat(app_dir, &st) == 0) {
+    bs5fm_notify("BS5FileManager app", "Updating PS5 home-screen launcher");
+  } else {
+    bs5fm_notify("BS5FileManager app", "Installing PS5 home-screen launcher");
+  }
 
   int err = sceAppInstUtilInitialize();
   if(err) {
@@ -129,11 +158,9 @@ bs5fm_install_app_if_needed(void) {
     return -1;
   }
 
-  err = sceAppInstUtilAppInstallTitleDir(BS5FM_APP_TITLE_ID,
-                                         BS5FM_APP_PARENT, NULL);
+  err = install_app(BS5FM_APP_TITLE_ID, BS5FM_APP_PARENT);
   if(err) {
-    printf("  launcher install: sceAppInstUtilAppInstallTitleDir failed 0x%08x\n",
-           err);
+    printf("  launcher install: install_app failed 0x%08x\n", err);
     return -1;
   }
 
@@ -144,5 +171,5 @@ bs5fm_install_app_if_needed(void) {
 
   bs5fm_notify("BS5FileManager app ready",
                "Tile opens http://127.0.0.1:5905/");
-  return 0;
+  return 1;
 }
