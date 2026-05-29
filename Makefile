@@ -9,7 +9,7 @@ else
     $(error PS5_PAYLOAD_SDK is undefined)
 endif
 
-VERSION_TAG := bs5fm-v1.0.0
+VERSION_TAG := bs5fm-v0.1.0
 BUILD_VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 PYTHON ?= python3
 HOST_LLVM_BINDIR ?= $(shell dirname "$$(command -v llvm-strip 2>/dev/null || command -v llvm-strip.exe 2>/dev/null || echo llvm-strip)" 2>/dev/null)
