@@ -1,0 +1,1269 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>BS5FileManager</title>
+  <style>
+    :root {
+      --paper: #f7f8f5;
+      --ink: #1f2421;
+      --soft: #eef1ec;
+      --line: #c9d0c8;
+      --muted: #657069;
+      --deep: #19382d;
+      --deep-2: #285944;
+      --mint: #d5f1df;
+      --sky: #d9ecff;
+      --gold: #ffe6a7;
+      --rose: #ffe0df;
+      --red: #b53632;
+      --shadow: rgba(28, 39, 34, 0.12);
+      --focus: rgba(40, 89, 68, 0.24);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 14px/1.35 Arial, Helvetica, sans-serif;
+      letter-spacing: 0;
+    }
+
+    body {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      padding: 0 11px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    button:hover:not(:disabled),
+    button:focus-visible,
+    input:focus-visible {
+      border-color: var(--deep-2);
+      box-shadow: 0 0 0 3px var(--focus);
+      outline: none;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+
+    button.primary {
+      border-color: var(--deep-2);
+      background: var(--deep);
+      color: #fff;
+    }
+
+    button.danger {
+      border-color: #e2a3a0;
+      background: var(--rose);
+      color: var(--red);
+    }
+
+    button.warn {
+      border-color: #debf62;
+      background: var(--gold);
+    }
+
+    .top {
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .top-inner {
+      width: min(1500px, 100%);
+      margin: 0 auto;
+      padding: 10px 14px;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .brand {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border: 2px solid var(--deep);
+      border-radius: 8px;
+      color: var(--deep);
+      font-weight: 800;
+    }
+
+    .title {
+      min-width: 0;
+    }
+
+    .title strong {
+      display: block;
+      font-size: 18px;
+    }
+
+    .title span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status {
+      min-height: 30px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--soft);
+      padding: 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #b0b8b1;
+    }
+
+    .status.ready .dot {
+      background: #2f9d5b;
+    }
+
+    .shell {
+      width: min(1500px, 100%);
+      margin: 0 auto;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 150px minmax(0, 1fr) 300px;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .rail,
+    .browser,
+    .target,
+    .job {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 8px 22px var(--shadow);
+      min-width: 0;
+    }
+
+    .rail {
+      padding: 10px;
+      align-self: start;
+      display: grid;
+      gap: 8px;
+    }
+
+    .rail button {
+      width: 100%;
+      justify-content: flex-start;
+      text-align: left;
+      background: var(--soft);
+    }
+
+    .rail button.active {
+      border-color: var(--deep-2);
+      background: var(--mint);
+      color: var(--deep);
+      font-weight: 700;
+    }
+
+    .browser {
+      min-height: 650px;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      overflow: hidden;
+    }
+
+    .pathbar {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto auto;
+      gap: 8px;
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+      background: var(--soft);
+    }
+
+    .path {
+      width: 100%;
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      padding: 0 10px;
+      font-family: Consolas, Menlo, monospace;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .count {
+      margin-left: auto;
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .file-head,
+    .file-row {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) 92px 112px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .file-head {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      min-height: 34px;
+      padding: 0 12px;
+      background: #fbfcfa;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .list {
+      min-height: 0;
+      overflow: auto;
+    }
+
+    .file-row {
+      min-height: 42px;
+      padding: 0 12px;
+      border-bottom: 1px solid #edf0eb;
+      cursor: default;
+      user-select: none;
+    }
+
+    .file-row:hover {
+      background: #f1f5f0;
+    }
+
+    .file-row.selected {
+      background: var(--sky);
+    }
+
+    .file-row.parent {
+      color: var(--muted);
+    }
+
+    .tag {
+      min-width: 0;
+      display: inline-flex;
+      justify-content: center;
+      border-radius: 5px;
+      border: 1px solid var(--line);
+      background: var(--soft);
+      color: var(--muted);
+      padding: 3px 0;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .file-row.dir .tag {
+      border-color: #b8d5c2;
+      background: var(--mint);
+      color: var(--deep);
+    }
+
+    .name,
+    .muted-cell {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .muted-cell {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .target {
+      align-self: start;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .target h2 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .target-path {
+      height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0 10px;
+      font-family: Consolas, Menlo, monospace;
+    }
+
+    .target-buttons,
+    .target-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .target-grid button {
+      background: var(--soft);
+    }
+
+    .detail {
+      min-height: 146px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfa;
+      padding: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      overflow: hidden;
+    }
+
+    .detail strong {
+      display: block;
+      color: var(--ink);
+      font-size: 13px;
+      margin-bottom: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .detail-grid {
+      display: grid;
+      gap: 6px;
+    }
+
+    .detail-row {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 78px minmax(0, 1fr);
+      gap: 8px;
+      align-items: baseline;
+    }
+
+    .detail-row span:first-child {
+      color: var(--muted);
+    }
+
+    .detail-row span:last-child {
+      min-width: 0;
+      color: var(--ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .detail-note {
+      margin-top: 7px;
+      padding-top: 7px;
+      border-top: 1px solid #e4e9e2;
+      color: var(--muted);
+    }
+
+    .job {
+      position: fixed;
+      left: 50%;
+      bottom: 14px;
+      z-index: 10;
+      width: min(840px, calc(100% - 28px));
+      transform: translateX(-50%);
+      display: none;
+      grid-template-columns: 110px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+    }
+
+    .job.show {
+      display: grid;
+    }
+
+    .meter {
+      height: 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+      background: var(--soft);
+    }
+
+    .meter-fill {
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--deep-2), #5ca06f);
+    }
+
+    .job-text {
+      color: var(--muted);
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .toast {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 12;
+      max-width: min(460px, calc(100% - 28px));
+      display: none;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 12px 28px var(--shadow);
+      padding: 10px 12px;
+    }
+
+    .toast.show {
+      display: block;
+    }
+
+    .toast.err {
+      border-color: #e3a19d;
+      background: var(--rose);
+    }
+
+    .toast.ok {
+      border-color: #b8d5c2;
+      background: var(--mint);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 1080px) {
+      .shell {
+        grid-template-columns: 132px minmax(0, 1fr);
+      }
+
+      .target {
+        grid-column: 1 / -1;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        align-items: start;
+      }
+
+      .target h2,
+      .detail {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .top-inner {
+        grid-template-columns: auto minmax(0, 1fr);
+      }
+
+      .status {
+        grid-column: 1 / -1;
+      }
+
+      .shell {
+        grid-template-columns: 1fr;
+        padding: 10px;
+      }
+
+      .rail {
+        display: flex;
+        overflow-x: auto;
+      }
+
+      .rail button {
+        width: auto;
+        flex: 0 0 auto;
+      }
+
+      .pathbar {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+      }
+
+      .pathbar #refresh {
+        grid-column: 1 / -1;
+      }
+
+      .actions {
+        flex-wrap: nowrap;
+      }
+
+      .file-head,
+      .file-row {
+        grid-template-columns: 40px minmax(0, 1fr) 78px;
+      }
+
+      .file-head span:last-child,
+      .file-row .mtime {
+        display: none;
+      }
+
+      .browser {
+        min-height: 540px;
+      }
+
+      .target {
+        grid-template-columns: 1fr;
+      }
+
+      .job {
+        grid-template-columns: 1fr auto;
+      }
+
+      .job .meter,
+      .job-text {
+        grid-column: 1 / -1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="top-inner">
+      <div class="brand">B5</div>
+      <div class="title">
+        <strong>BS5FileManager</strong>
+        <span id="build">File Manager</span>
+      </div>
+      <div class="status" id="status"><span class="dot"></span><span>Connecting</span></div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <nav class="rail" id="places" aria-label="Places"></nav>
+
+    <section class="browser" aria-label="Files">
+      <div class="pathbar">
+        <button id="up">Up</button>
+        <input id="path" class="path" spellcheck="false" value="/data">
+        <button id="go" class="primary">Go</button>
+        <button id="refresh">Refresh</button>
+      </div>
+
+      <div class="actions">
+        <button id="new-folder">New Folder</button>
+        <button id="rename">Rename</button>
+        <button id="download">Download</button>
+        <button id="upload-files" class="warn">Upload Files</button>
+        <button id="upload-folder" class="warn">Upload Folder</button>
+        <button id="delete" class="danger">Delete</button>
+        <span id="selection" class="count">0 selected</span>
+      </div>
+
+      <div class="list" id="list">
+        <div class="file-head">
+          <span>Kind</span>
+          <span>Name</span>
+          <span>Type</span>
+          <span>Modified</span>
+        </div>
+      </div>
+    </section>
+
+    <aside class="target" aria-label="Transfer target">
+      <h2>Target</h2>
+      <input id="target-path" class="target-path" spellcheck="false" value="/mnt/usb0">
+      <div class="target-buttons">
+        <button id="copy" class="primary">Copy Here</button>
+        <button id="move">Move Here</button>
+      </div>
+      <div class="target-grid">
+        <button data-target="/data/homebrew">/data/homebrew</button>
+        <button data-target="/mnt/usb0">/mnt/usb0</button>
+        <button id="target-current">Current</button>
+        <button id="open-target">Open</button>
+      </div>
+      <div class="detail" id="detail">
+        <strong>No selection</strong>
+        <span>Ready</span>
+      </div>
+    </aside>
+  </main>
+
+  <section id="job" class="job" aria-live="polite">
+    <strong id="job-verb">Working</strong>
+    <div class="meter"><div id="job-fill" class="meter-fill"></div></div>
+    <button id="job-cancel">Cancel</button>
+    <span id="job-text" class="job-text"></span>
+  </section>
+
+  <input id="file-picker" class="hidden" type="file" multiple>
+  <input id="folder-picker" class="hidden" type="file" multiple webkitdirectory directory>
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const places = [
+      ['Root', '/'],
+      ['Data', '/data'],
+      ['Mounts', '/mnt'],
+      ['User', '/user'],
+      ['System', '/system_data']
+    ];
+
+    const state = {
+      path: '/data',
+      entries: [],
+      selected: new Set(),
+      detailToken: 0,
+      uploadBusy: false,
+      jobTimer: 0
+    };
+
+    function el(id) {
+      return document.getElementById(id);
+    }
+
+    function cleanPath(path) {
+      if (!path || path[0] !== '/') return '/';
+      return path.replace(/\/+/g, '/').replace(/\/$/, '') || '/';
+    }
+
+    function parentPath(path) {
+      path = cleanPath(path);
+      if (path === '/') return '/';
+      const i = path.lastIndexOf('/');
+      return i <= 0 ? '/' : path.slice(0, i);
+    }
+
+    function joinPath(dir, name) {
+      dir = cleanPath(dir);
+      return dir === '/' ? '/' + name : dir + '/' + name;
+    }
+
+    function fileUrl(path) {
+      return '/fs' + cleanPath(path).split('/').map(encodeURIComponent).join('/');
+    }
+
+    function api(url) {
+      return fetch(url, { cache: 'no-store' }).then(async (response) => {
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok || body.ok === false) {
+          throw new Error(body.error || ('HTTP ' + response.status));
+        }
+        return body;
+      });
+    }
+
+    function toast(message, kind) {
+      const box = el('toast');
+      box.textContent = message;
+      box.className = 'toast show ' + (kind || '');
+      clearTimeout(box._timer);
+      box._timer = setTimeout(() => {
+        box.className = 'toast';
+      }, 3200);
+    }
+
+    function sortEntries(entries) {
+      return entries.slice().sort((a, b) => {
+        if (a.dir !== b.dir) return a.dir ? -1 : 1;
+        return a.name.localeCompare(b.name);
+      });
+    }
+
+    function shortSize(size) {
+      if (!Number.isFinite(size) || size < 0) return '';
+      const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+      let value = size;
+      let unit = 0;
+      while (value >= 1024 && unit < units.length - 1) {
+        value /= 1024;
+        unit++;
+      }
+      return (unit ? value.toFixed(value >= 10 ? 0 : 1) : value.toFixed(0)) + ' ' + units[unit];
+    }
+
+    function exactSize(size) {
+      if (!Number.isFinite(size) || size < 0) return 'Unknown';
+      return shortSize(size) + ' (' + Math.round(size).toLocaleString() + ' bytes)';
+    }
+
+    function shortDuration(seconds) {
+      if (!Number.isFinite(seconds) || seconds < 0) return 'unknown';
+      seconds = Math.round(seconds);
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = seconds % 60;
+      if (h) return h + 'h ' + m + 'm';
+      if (m) return m + 'm ' + s + 's';
+      return s + 's';
+    }
+
+    function formatDate(seconds) {
+      if (!Number.isFinite(seconds) || seconds <= 0) return 'Unknown';
+      return new Date(seconds * 1000).toLocaleString();
+    }
+
+    function jobProgressText(job) {
+      const copied = Number(job.copiedBytes || 0);
+      const total = Number(job.totalBytes || 0);
+      const doneFiles = Number(job.doneFiles || 0);
+      const totalFiles = Number(job.totalFiles || 0);
+      const failedFiles = Number(job.failedFiles || 0);
+      const elapsed = Math.max(0, (Date.now() / 1000) - Number(job.startedAt || 0));
+      const speed = elapsed > 0 && copied > 0 ? copied / elapsed : 0;
+      const pct = total > 0 ? Math.max(0, Math.min(100, (copied / total) * 100)) : 0;
+      const parts = [];
+
+      if (total > 0) {
+        parts.push(shortSize(copied) + ' / ' + shortSize(total));
+        parts.push(pct.toFixed(1) + '%');
+      } else if (job.busy) {
+        parts.push(job.current || 'Preparing');
+      }
+
+      if (totalFiles > 0) {
+        parts.push(doneFiles + ' / ' + totalFiles + ' items');
+      }
+
+      if (speed > 0) {
+        parts.push(shortSize(speed) + '/s');
+        if (total > copied) parts.push('ETA ' + shortDuration((total - copied) / speed));
+      }
+
+      if (failedFiles > 0) parts.push(failedFiles + ' failed');
+      if (job.cancelling) parts.push('cancelling');
+
+      if (job.current && total > 0) parts.push(job.current);
+      if (!parts.length) return job.error || 'Done';
+      return parts.join(' | ');
+    }
+
+    function detailRow(label, value) {
+      const row = document.createElement('div');
+      row.className = 'detail-row';
+
+      const key = document.createElement('span');
+      key.textContent = label;
+
+      const val = document.createElement('span');
+      val.textContent = value || 'Unknown';
+      val.title = val.textContent;
+
+      row.appendChild(key);
+      row.appendChild(val);
+      return row;
+    }
+
+    function renderDetail(title, rows, note) {
+      const detail = el('detail');
+      detail.textContent = '';
+
+      const strong = document.createElement('strong');
+      strong.textContent = title;
+      strong.title = title;
+      detail.appendChild(strong);
+
+      const grid = document.createElement('div');
+      grid.className = 'detail-grid';
+      for (const row of rows) {
+        grid.appendChild(detailRow(row[0], row[1]));
+      }
+      detail.appendChild(grid);
+
+      if (note) {
+        const info = document.createElement('div');
+        info.className = 'detail-note';
+        info.textContent = note;
+        detail.appendChild(info);
+      }
+    }
+
+    function selectedPaths() {
+      return Array.from(state.selected).map((name) => joinPath(state.path, name));
+    }
+
+    function selectedEntries() {
+      return state.entries.filter((entry) => state.selected.has(entry.name));
+    }
+
+    async function loadFolderSize(path, token, entry) {
+      try {
+        const du = await api('/api/fs/du?path=' + encodeURIComponent(path));
+        if (token !== state.detailToken) return;
+        if (!state.selected.has(entry.name)) return;
+
+        const rows = [
+          ['Kind', 'Folder'],
+          ['Size', exactSize(du.size)],
+          ['Files', String(du.files || 0)],
+          ['Folders', String(Math.max(0, (du.dirs || 0) - 1))],
+          ['Path', path]
+        ];
+        const note = 'Full recursive size calculated on selection only.';
+        renderDetail(entry.name, rows, note);
+      } catch (err) {
+        if (token !== state.detailToken) return;
+        const rows = [
+          ['Kind', 'Folder'],
+          ['Size', exactSize(entry.size)],
+          ['Modified', formatDate(entry.mtime)],
+          ['Path', path]
+        ];
+        renderDetail(entry.name, rows, 'Could not calculate folder size: ' + err.message);
+      }
+    }
+
+    function updatePlaces() {
+      document.querySelectorAll('#places button').forEach((button) => {
+        button.classList.toggle('active', cleanPath(button.dataset.path) === state.path);
+      });
+    }
+
+    function updateSelection() {
+      const token = ++state.detailToken;
+      const entries = selectedEntries();
+      el('selection').textContent = entries.length + ' selected';
+
+      const detail = el('detail');
+      if (!entries.length) {
+        renderDetail('No selection', [
+          ['Path', state.path],
+          ['Items', state.entries.length + ' visible']
+        ], 'Select a file or folder to see size and modified date.');
+        return;
+      }
+
+      const dirs = entries.filter((entry) => entry.dir).length;
+      const files = entries.length - dirs;
+      if (entries.length === 1) {
+        const entry = entries[0];
+        const path = joinPath(state.path, entry.name);
+        const rows = [
+          ['Kind', entry.dir ? 'Folder' : 'File'],
+          ['Size', exactSize(entry.size)],
+          ['Modified', formatDate(entry.mtime)],
+          ['Path', path]
+        ];
+        let note = '';
+        if (entry.dir) {
+          note = 'Calculating full folder size...';
+          loadFolderSize(path, token, entry);
+        }
+        renderDetail(entry.name, rows, note);
+        return;
+      }
+
+      const totalFileBytes = entries.reduce((sum, entry) => {
+        return entry.dir || !Number.isFinite(entry.size) ? sum : sum + entry.size;
+      }, 0);
+      renderDetail(entries.length + ' items', [
+        ['Files', String(files)],
+        ['Folders', String(dirs)],
+        ['File size', exactSize(totalFileBytes)],
+        ['Location', state.path]
+      ], dirs ? 'Folder contents are not included in the total.' : '');
+    }
+
+    function makeRow(entry, parent) {
+      const row = document.createElement('div');
+      row.className = 'file-row ' + (entry.dir ? 'dir ' : '') + (parent ? 'parent' : '');
+      row.innerHTML =
+        '<span class="tag"></span><span class="name"></span><span class="muted-cell type"></span><span class="muted-cell mtime"></span>';
+
+      row.querySelector('.tag').textContent = entry.dir ? 'DIR' : 'FILE';
+      row.querySelector('.name').textContent = entry.name;
+      row.querySelector('.type').textContent = parent ? '' : (entry.dir ? 'folder' : shortSize(entry.size || 0));
+      row.querySelector('.mtime').textContent = entry.mtime ? new Date(entry.mtime * 1000).toLocaleDateString() : '';
+
+      if (!parent && state.selected.has(entry.name)) {
+        row.classList.add('selected');
+      }
+
+      row.addEventListener('click', (event) => {
+        if (parent) {
+          openPath(parentPath(state.path));
+          return;
+        }
+        if (event.ctrlKey || event.metaKey) {
+          if (state.selected.has(entry.name)) state.selected.delete(entry.name);
+          else state.selected.add(entry.name);
+        } else {
+          state.selected.clear();
+          state.selected.add(entry.name);
+        }
+        drawList();
+      });
+
+      row.addEventListener('dblclick', () => {
+        if (parent) return;
+        const next = joinPath(state.path, entry.name);
+        if (entry.dir) {
+          openPath(next);
+        } else {
+          window.open(fileUrl(next), '_blank');
+        }
+      });
+
+      return row;
+    }
+
+    function drawList() {
+      const list = el('list');
+      list.textContent = '';
+
+      const head = document.createElement('div');
+      head.className = 'file-head';
+      head.innerHTML = '<span>Kind</span><span>Name</span><span>Type</span><span>Modified</span>';
+      list.appendChild(head);
+
+      if (state.path !== '/') {
+        list.appendChild(makeRow({ name: '..', dir: true }, true));
+      }
+
+      for (const entry of state.entries) {
+        list.appendChild(makeRow(entry, false));
+      }
+
+      updatePlaces();
+      updateSelection();
+    }
+
+    function showLoading() {
+      const list = el('list');
+      list.textContent = '';
+      const head = document.createElement('div');
+      head.className = 'file-head';
+      head.innerHTML = '<span>Kind</span><span>Name</span><span>Type</span><span>Modified</span>';
+      const row = document.createElement('div');
+      row.className = 'file-row';
+      row.innerHTML = '<span class="tag">...</span><span class="name">Loading</span><span></span><span></span>';
+      list.appendChild(head);
+      list.appendChild(row);
+    }
+
+    async function refresh() {
+      state.path = cleanPath(el('path').value || state.path);
+      el('path').value = state.path;
+      showLoading();
+
+      try {
+        const data = await api('/api/fs/list?path=' + encodeURIComponent(state.path));
+        state.entries = sortEntries(data.entries || []);
+        state.selected.clear();
+        drawList();
+      } catch (err) {
+        state.entries = [];
+        drawList();
+        toast(err.message, 'err');
+      }
+    }
+
+    async function openPath(path) {
+      state.path = cleanPath(path);
+      el('path').value = state.path;
+      await refresh();
+    }
+
+    async function transfer(verb) {
+      const paths = selectedPaths();
+      const target = cleanPath(el('target-path').value);
+      if (!paths.length) {
+        toast('No selection', 'err');
+        return;
+      }
+
+      for (const source of paths) {
+        try {
+          await api('/api/fs/' + verb +
+            '?src=' + encodeURIComponent(source) +
+            '&dst=' + encodeURIComponent(target));
+          pollJob();
+          const done = await waitJobIdle();
+          if (done.error) throw new Error(done.error);
+        } catch (err) {
+          toast(verb + ': ' + err.message, 'err');
+          break;
+        }
+      }
+
+      await refresh();
+    }
+
+    async function waitJobIdle() {
+      let missed = 0;
+      for (;;) {
+        try {
+          const job = await api('/api/fs/job/status');
+          missed = 0;
+          if (!job.busy) return job;
+        } catch (err) {
+          missed++;
+          if (missed >= 120) throw err;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 700));
+      }
+    }
+
+    async function makeFolder() {
+      const name = prompt('Folder name');
+      if (!name) return;
+      try {
+        await api('/api/fs/mkdir?path=' + encodeURIComponent(joinPath(state.path, name)));
+        await refresh();
+        toast('Folder created', 'ok');
+      } catch (err) {
+        toast('mkdir: ' + err.message, 'err');
+      }
+    }
+
+    async function renameOne() {
+      const entries = selectedEntries();
+      if (entries.length !== 1) {
+        toast('Select one item', 'err');
+        return;
+      }
+      const next = prompt('New name', entries[0].name);
+      if (!next || next === entries[0].name) return;
+      try {
+        await api('/api/fs/rename?src=' +
+          encodeURIComponent(joinPath(state.path, entries[0].name)) +
+          '&dst=' + encodeURIComponent(joinPath(state.path, next)));
+        await refresh();
+        toast('Renamed', 'ok');
+      } catch (err) {
+        toast('rename: ' + err.message, 'err');
+      }
+    }
+
+    function downloadSelected() {
+      const entries = selectedEntries();
+      if (entries.length !== 1 || entries[0].dir) {
+        toast('Select one file', 'err');
+        return;
+      }
+      window.open(fileUrl(joinPath(state.path, entries[0].name)), '_blank');
+    }
+
+    async function deleteSelected() {
+      const paths = selectedPaths();
+      if (!paths.length) {
+        toast('No selection', 'err');
+        return;
+      }
+      if (!confirm('Delete ' + paths.length + ' item(s)?')) return;
+
+      for (const path of paths) {
+        try {
+          await api('/api/fs/delete?recursive=1&path=' + encodeURIComponent(path));
+          pollJob();
+          const done = await waitJobIdle();
+          if (done.error) throw new Error(done.error);
+        } catch (err) {
+          toast('delete: ' + err.message, 'err');
+          break;
+        }
+      }
+      await refresh();
+    }
+
+    function uploadOne(file, relPath) {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        let url = '/api/fs/upload?path=' + encodeURIComponent(state.path) +
+          '&filename=' + encodeURIComponent(file.name);
+        if (relPath) url += '&relpath=' + encodeURIComponent(relPath);
+
+        xhr.open('POST', url);
+        xhr.onload = () => {
+          let body = {};
+          try { body = JSON.parse(xhr.responseText || '{}'); } catch (err) {}
+          if (xhr.status >= 200 && xhr.status < 300 && body.ok !== false) {
+            resolve(body);
+          } else {
+            reject(new Error(body.error || ('HTTP ' + xhr.status)));
+          }
+        };
+        xhr.onerror = () => reject(new Error('network error'));
+        xhr.send(file);
+      });
+    }
+
+    async function uploadFiles(files) {
+      if (!files || !files.length || state.uploadBusy) return;
+      state.uploadBusy = true;
+      let ok = 0;
+      let failed = 0;
+
+      for (const file of files) {
+        const relPath = file.webkitRelativePath ?
+          file.webkitRelativePath.split('/').slice(0, -1).join('/') : '';
+        try {
+          await uploadOne(file, relPath);
+          ok++;
+          toast('Uploaded ' + ok + ' / ' + files.length, 'ok');
+        } catch (err) {
+          failed++;
+          toast('upload: ' + err.message, 'err');
+        }
+      }
+
+      state.uploadBusy = false;
+      await refresh();
+      toast(ok + ' uploaded' + (failed ? ', ' + failed + ' failed' : ''), failed ? 'err' : 'ok');
+    }
+
+    function pollJob() {
+      const box = el('job');
+      const fill = el('job-fill');
+      const text = el('job-text');
+      const verb = el('job-verb');
+
+      if (state.jobTimer) clearInterval(state.jobTimer);
+      box.classList.add('show');
+      text.textContent = 'Starting';
+      let missed = 0;
+
+      state.jobTimer = setInterval(async () => {
+        try {
+          const job = await api('/api/fs/job/status');
+          missed = 0;
+          const pct = job.totalBytes > 0 ?
+            Math.max(0, Math.min(100, (job.copiedBytes / job.totalBytes) * 100)) : 0;
+          fill.style.width = pct.toFixed(1) + '%';
+          verb.textContent = job.verb || 'Working';
+          text.textContent = jobProgressText(job);
+
+          if (!job.busy) {
+            clearInterval(state.jobTimer);
+            state.jobTimer = 0;
+            if (job.error) toast(job.error, 'err');
+            setTimeout(() => box.classList.remove('show'), 1400);
+          }
+        } catch (err) {
+          missed++;
+          text.textContent = 'Waiting for status...';
+          if (missed >= 120) {
+            clearInterval(state.jobTimer);
+            state.jobTimer = 0;
+            box.classList.remove('show');
+            toast('Lost job status: ' + err.message, 'err');
+          }
+        }
+      }, 500);
+    }
+
+    async function boot() {
+      const placeRoot = el('places');
+      const extra = [];
+
+      try {
+        const usb = await api('/api/fs/usb');
+        for (const mount of usb.mounts || []) {
+          extra.push([mount.path.replace('/mnt/', '').toUpperCase(), mount.path]);
+        }
+      } catch (err) {}
+
+      for (const [label, path] of places.concat(extra)) {
+        const button = document.createElement('button');
+        button.textContent = label;
+        button.dataset.path = path;
+        button.addEventListener('click', () => openPath(path));
+        placeRoot.appendChild(button);
+      }
+
+      el('up').addEventListener('click', () => openPath(parentPath(state.path)));
+      el('go').addEventListener('click', refresh);
+      el('refresh').addEventListener('click', refresh);
+      el('path').addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') refresh();
+      });
+
+      el('new-folder').addEventListener('click', makeFolder);
+      el('rename').addEventListener('click', renameOne);
+      el('download').addEventListener('click', downloadSelected);
+      el('delete').addEventListener('click', deleteSelected);
+      el('copy').addEventListener('click', () => transfer('copy'));
+      el('move').addEventListener('click', () => transfer('move'));
+      el('target-current').addEventListener('click', () => {
+        el('target-path').value = state.path;
+      });
+      el('open-target').addEventListener('click', () => {
+        openPath(el('target-path').value);
+      });
+      document.querySelectorAll('[data-target]').forEach((button) => {
+        button.addEventListener('click', () => {
+          el('target-path').value = button.dataset.target;
+        });
+      });
+      el('job-cancel').addEventListener('click', () => {
+        fetch('/api/fs/job/cancel').catch(() => {});
+      });
+
+      el('upload-files').addEventListener('click', () => {
+        el('file-picker').value = '';
+        el('file-picker').click();
+      });
+      el('upload-folder').addEventListener('click', () => {
+        if (!('webkitdirectory' in document.createElement('input'))) {
+          toast('Folder picking is not available in this browser', 'err');
+          return;
+        }
+        el('folder-picker').value = '';
+        el('folder-picker').click();
+      });
+      el('file-picker').addEventListener('change', (event) => {
+        uploadFiles(Array.from(event.target.files || []));
+      });
+      el('folder-picker').addEventListener('change', (event) => {
+        uploadFiles(Array.from(event.target.files || []));
+      });
+
+      await refresh();
+
+      api('/api/status').then((info) => {
+        const status = el('status');
+        status.classList.add('ready');
+        status.querySelector('span:last-child').textContent = 'Ready';
+        el('build').textContent = (info.tag || 'bs5fm') + ' / port 5905';
+      }).catch(() => {
+        el('status').querySelector('span:last-child').textContent = 'Offline';
+      });
+
+      api('/api/fs/job/status').then((job) => {
+        if (job.busy) pollJob();
+      }).catch(() => {});
+    }
+
+    boot();
+  </script>
+</body>
+</html>

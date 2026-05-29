@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+
+case "$1" in
+  --bindir)
+    if [ -n "$LLVM_BINDIR" ]; then
+      printf '%s\n' "$LLVM_BINDIR"
+    else
+      dirname "$(command -v clang 2>/dev/null || command -v clang.exe 2>/dev/null || printf clang)"
+    fi
+    ;;
+  --version)
+    printf '%s\n' "${LLVM_VERSION:-22.1.6}"
+    ;;
+  *)
+    exit 1
+    ;;
+esac

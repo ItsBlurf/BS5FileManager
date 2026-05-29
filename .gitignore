@@ -1,0 +1,18 @@
+# Build output
+gen/
+*.o
+*.a
+*.so
+*.elf
+
+# Local environment / editor noise
+.env
+.env.*
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Temporary research or extracted payload sources
+.research/
+tmp/
