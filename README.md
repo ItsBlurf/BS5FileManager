@@ -21,8 +21,7 @@ http://<PS5_IP>:5905/
 ```
 
 On each run, the payload installs or refreshes a PS5 home-screen tile named
-`BS5FileManager` using title ID `BSFM00001`. The tile uses the `BS5 / FM` icon
-and opens the local console URL:
+`BS5FileManager` using title ID `BSFM00001`. The tile opens the local console URL:
 
 ```text
 http://127.0.0.1:5905/
